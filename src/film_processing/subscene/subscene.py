@@ -215,18 +215,12 @@ def get_first_film(soup, section):
 def search(term, language="", limit_to=SearchTypes.Exact):
     soup = soup_for("%s/subtitles/title?q=%s&l=%s" % (SITE_DOMAIN, term,
                                                       language))
-    print("IN SEARCH 1")
     if "Subtitle search by" in str(soup):
-        print("IN SEARCH 2")
         rows = soup.find("table").tbody.find_all("tr")
         subtitles = Subtitle.from_rows(rows)
         return Film(term, subtitles=subtitles)
-    print("IN SEARCH 3")
     for junk, search_type in SearchTypes.__members__.items():
-        print("IN SEARCH 4")
         if section_exists(soup, search_type):
-            print("IN SEARCH 5")
             return get_first_film(soup, search_type)
         if limit_to6== search_type:
-            print("IN SEARCH 6")
             return
