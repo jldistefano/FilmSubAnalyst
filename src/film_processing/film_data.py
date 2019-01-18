@@ -10,7 +10,7 @@ from imdb.Person import Person
 import shutil
 # from imdb.helpers import get_byURL 	# Allows for access to IMDB Objects through imdb url, currently unused
 import zipfile 							# Used for unzipping downloaded zip files from subscene
-from subscene.subscene import * 		# Used for collceting zip files containing subtitles from subscene.com
+from subscene.subscene import search 	# Used for collceting zip files containing subtitles from subscene.com
 import cfscrape							# Used for bypassing subscene.com Clouflare DDOS protection
 
 #IMDB FUNCTIONS
@@ -79,12 +79,10 @@ def search_for_movie(searchMovie, language="english"):
 	"""
 	film = search(searchMovie, language)
 	if film is None:
-		print("Went to close search")
-		# Last paramater dictates type of search, see subscene.py
+		# Last paramater dictates type of search, close search. see subscene.py
 		film = search(searchMovie, language, 4)
 	if film is None:
-		print("Went to popular search")
-		# Last paramater dictates type of search, see subscene.py
+		# Last paramater dictates type of search, popular search. see subscene.py
 		film = search(searchMovie, language, 3)
 	if film is None:
 		return film
