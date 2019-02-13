@@ -1,4 +1,4 @@
-# FilmSubAnalyst
+# Film Subtitle Analyst
 
 This is a desktop application which can download and analyze .srt subtitle files. Downloaded files are collected from subscene.com.
 
