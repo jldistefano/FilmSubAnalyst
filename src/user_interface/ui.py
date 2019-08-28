@@ -1,12 +1,13 @@
 import sys
-import math
+from math import ceil
 sys.path.append(sys.path[0] + "/../")
-from film_processing.film_data import *
+from film_processing.film_data import get_movie_info, search_for_movie, fixIMDBurl, get_sub_files, clean_sub_dir, get_IMDB_ID
 from film_processing.sub_data import SubtitleData, get_nth_string
 from sub_processing.srt_parsing import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QGridLayout, QPushButton, QAction, QLabel, QVBoxLayout, \
+    QFrame, QDialog, QPlainTextEdit, QLineEdit, QTabWidget, QGroupBox, QFileDialog, QInputDialog, QMessageBox
+from PyQt5.QtGui import QFont, QPalette, QPixmap
+from PyQt5 import QtCore
 
 class Gui(QMainWindow):
 
@@ -36,6 +37,7 @@ class Gui(QMainWindow):
 
         #== MAIN DIALOG =======================================================
         # Initializes Main Dialog elements
+        initSubFileDir()
         self.initFileBar()
         self.initGraph()
         self.initList()
@@ -186,13 +188,13 @@ class Gui(QMainWindow):
         # This label holds the image of the graph
         self.graphLabel = QLabel("", self)
         self.graphLabel.setGeometry(0, 0, 650, 650)
-        self.graphLabel.setAlignment(Qt.AlignCenter)
+        self.graphLabel.setAlignment(QtCore.Qt.AlignCenter)
 
         # This holds information about the graph
         self.graphInfo = QLabel("", self)
         self.graphInfo.setGeometry(0, 0, 650, 60)
         self.graphInfo.setFont(self.headerFont)
-        self.graphInfo.setAlignment(Qt.AlignCenter)
+        self.graphInfo.setAlignment(QtCore.Qt.AlignCenter)
 
     def initList(self):
         """
@@ -396,8 +398,13 @@ class Gui(QMainWindow):
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Words In This Film \n"
-            info += "That's About " + str(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " Words per Minute or About " \
-                + str(math.ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)) + " Words per Second"
+            info += "That's {:.2f}".format((count_data['count'][-1])/(count_data['time'][-1])) + " Words per Minute or About "
+            wps = math.ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)
+            if (wps == 1):
+                info += "1 Word per Second"
+            else:
+                info += str(wps) + " Words per Second"
+
             self.setGraph(self.subData.imgpath, info)
             self.setTitle("Total Word Count In \"" + self.movieTitle + "\"")
         # If word count is zero, an error message is opened
@@ -421,7 +428,7 @@ class Gui(QMainWindow):
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Unique Words In This Film \n"
-            info += "That's About " + str(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
+            info += "That's {:.2f}".format(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
             self.setGraph(self.subData.imgpath, info)
             self.setTitle("Total Unique Word Count In \"" + self.movieTitle + "\"")
         # If the word count is zero, an error message is opened
@@ -647,8 +654,23 @@ class Gui(QMainWindow):
                 msg.setWindowTitle("Error")
                 msg.exec()
 
+def initSubFileDir():
+    """
+    Initializes the 'sub_files' directories if they do not currently exist
+    """
+    if not (os.path.isdir("../../sub_files")):
+        os.mkdir("../../sub_files")
+    if not (os.path.isdir("../../sub_files/srt")):
+        os.mkdir("../../sub_files/srt")
+    if not (os.path.isdir("../../sub_files/txt")):
+        os.mkdir("../../sub_files/txt")
+    if not (os.path.isdir("../../sub_files/png")):
+        os.mkdir("../../sub_files/png")
+    if not (os.path.isdir("../../sub_files/zip")):
+        os.mkdir("../../sub_files/zip")
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = Gui()
     ex.show()
-    sys.exit(app.exec_())  
+    sys.exit(app.exec_())

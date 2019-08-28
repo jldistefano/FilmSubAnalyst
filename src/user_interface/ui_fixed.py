@@ -386,8 +386,13 @@ class Gui(QMainWindow):
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Words In This Film \n"
-            info += "That's About " + str(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " Words per Minute or About " \
-                + str(math.ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)) + " Words per Second"
+            info += "That's {:.2f}".format((count_data['count'][-1])/(count_data['time'][-1])) + " Words per Minute or About "
+            wps = math.ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)
+            if (wps == 1):
+                info += "1 Word per Second"
+            else:
+                info += str(wps) + " Words per Second"
+
             self.setGraph(self.subData.imgpath, info)
             self.setTitle("Total Word Count In \"" + self.movieTitle + "\"")
         # If word count is zero, an error message is opened
@@ -411,7 +416,7 @@ class Gui(QMainWindow):
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Unique Words In This Film \n"
-            info += "That's About " + str(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
+            info += "That's {:.2f}".format(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
             self.setGraph(self.subData.imgpath, info)
             self.setTitle("Total Unique Word Count In \"" + self.movieTitle + "\"")
         # If the word count is zero, an error message is opened

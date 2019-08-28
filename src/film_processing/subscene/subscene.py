@@ -29,6 +29,7 @@ import re
 import enum
 from contextlib import suppress
 from urllib.request import Request, urlopen
+from urllib.parse import urlencode
 from bs4 import BeautifulSoup
 import cfscrape
 
@@ -213,20 +214,29 @@ def get_first_film(soup, section):
 
 
 def search(term, language="", limit_to=SearchTypes.Exact):
-    soup = soup_for("%s/subtitles/title?q=%s&l=%s" % (SITE_DOMAIN, term,
-                                                      language))
-    print("IN SEARCH 1")
+    # THIS LINE'S URL NO LONGER EXISTS
+    #soup = soup_for("%s/subtitles/title?q=%s&l=%s" % (SITE_DOMAIN, term,
+    #                                                  language))
+
+    # Following Code added to counteract subscene site change
+    #
+    url = 'https://subscene.com/subtitles/searchbytitle'
+    d = dict({'query' : term})
+    data = urlencode(d).encode("utf-8")
+
+    req = Request(url, data=data, headers={'User-Agent': 'Mozilla/5.0'})
+
+    content = urlopen(req)
+    soup = BeautifulSoup(content, "lxml")
+    #======================================================
+
     if "Subtitle search by" in str(soup):
-        print("IN SEARCH 2")
         rows = soup.find("table").tbody.find_all("tr")
         subtitles = Subtitle.from_rows(rows)
         return Film(term, subtitles=subtitles)
-    print("IN SEARCH 3")
+
     for junk, search_type in SearchTypes.__members__.items():
-        print("IN SEARCH 4")
         if section_exists(soup, search_type):
-            print("IN SEARCH 5")
             return get_first_film(soup, search_type)
-        if limit_to6== search_type:
-            print("IN SEARCH 6")
+        if limit_to == search_type:
             return

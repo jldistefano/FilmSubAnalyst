@@ -194,10 +194,11 @@ def get_word_list(subtitle_list, dirname="custom"):
 			# This handles times ie) 8:45 and character names. Otherwise colons are removed
 			elif (currChar == ':'):
 				if (i < len(sub.content) - 1) and (i != 0):
-					if ((ord(sub.content[i - 1]) < 48) or (ord(sub.content[i - 1]) > 57)) or ((ord(sub.content[i + 1]) < 48) or (ord(sub.content[i + 1]) > 57)):
-						currChar = "\0"
-					elif (sub.content[i + 1] == ' '):
+					if (sub.content[i + 1] == ' '):
 						currWord = ""
+						currChar = " "
+					elif ((ord(sub.content[i - 1]) < 48) or (ord(sub.content[i - 1]) > 57)) or ((ord(sub.content[i + 1]) < 48) or (ord(sub.content[i + 1]) > 57)):
+						currChar = "\0"
 				else:
 					currChar = "\0"
 			# If the current character is valid, 0-9, a-z, A-Z, ', :. They are added to the current word. 
@@ -296,5 +297,3 @@ def sort_freq_list(arr):
 			arr[k] = R_list[j] 
 			j+=1
 			k+=1
-
-	
