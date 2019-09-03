@@ -14,17 +14,14 @@ class SubtitleData():
 
 	def __init__(self):
 		self.subpath = " "
-		self.listpath = " "
-		self.countpath = " "
+		self.dbpath = " "
 		self.imgpath = " "
 
 	def open_subtitle(self, subtitle_path):
 		self.subpath = subtitle_path
 		dirname = subtitle_path.split("/")[-2]
 		word_list = srtp.load_srt(self.subpath)
-		self.listpath = srtp.get_word_list(word_list, dirname)
-		self.countpath = srtp.get_word_count(self.listpath, dirname)
-
+		self.dbpath = srtp.gen_word_db(word_list, dirname)
 
 	def get_phrase_count(self, phrase):
 		"""
@@ -35,7 +32,7 @@ class SubtitleData():
 		"""
 		phrase = phrase.lower()			# Converts phrase into lower case form
 		phrase_list = phrase.split()	# Converts phrase into list of words
-		word_list = srtp.load_word_list(self.listpath)	# Loads entire subtitle into word_list
+		word_list = srtp.load_word_list(self.dbpath)	# Loads entire subtitle into word_list
 		frequency = 0	# Represents the frequency of the phrase
 		judge_word = 0	# Represents the word in the phrase to be looking for
 	
@@ -55,14 +52,16 @@ class SubtitleData():
 				judge_word = 0
 		return frequency
 	
-	def get_phrase_freq(self, phrase, count):
+	def get_phrase_freq(self, phrase):
 		lowerphrase = phrase.lower()
-		with open(self.countpath, 'r') as file:
-			while (file):
-				line = file.readline().split("\t")
-				word = line[1]
-				if (word == lowerphrase):
-					return get_nth_string(int(line[0][:-1]))
+		word_counts = srtp.load_word_count(self.dbpath)
+		rank = 0
+
+		for row in word_counts:
+			rank += 1
+			if (row[0] == lowerphrase):
+				return get_nth_string(rank)
+
 		return "0th"
 
 	def get_phrase_count_data(self, phrase, grouping=5):
@@ -79,7 +78,7 @@ class SubtitleData():
 		time = [0]	# Create time list
 		phrase = phrase.lower()			# Converts phrase into lower case form
 		phrase_list = phrase.split()	# Converts phrase into list of words
-		word_list = srtp.load_word_list(self.listpath)	# Loads entire subtitle into word_list
+		word_list = srtp.load_word_list(self.dbpath)	# Loads entire subtitle into word_list
 		frequency = 0	# Represents the frequency of the phrase
 		judge_word = 0	# Represents the word in the phrase to be looking for
 	
@@ -130,7 +129,7 @@ class SubtitleData():
 	def get_word_count_data(self, grouping=5):
 		count = [0]	# Create count list
 		time = [0]	# Create time list
-		word_list = srtp.load_word_list(self.listpath)	# Loads entire subtitle into word_list
+		word_list = srtp.load_word_list(self.dbpath)	# Loads entire subtitle into word_list
 		# For every every word in the list, add one to count and time to time list
 		for word in word_list:
 			if (math.floor(word[1]/60)//grouping != time[-1]):
@@ -159,7 +158,7 @@ class SubtitleData():
 	def get_word_variety_data(self, grouping=5):
 		count = [0]	# Create count list
 		time = [0]	# Create time list
-		word_list = srtp.load_word_list(self.listpath)	# Loads entire subtitle into word_list
+		word_list = srtp.load_word_list(self.dbpath)	# Loads entire subtitle into word_list
 		unique_words = []
 		# For every every word in the list check for the unique word
 		for word in word_list:
