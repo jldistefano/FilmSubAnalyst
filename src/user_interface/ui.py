@@ -13,7 +13,7 @@ class Gui(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.title = 'Subtitle Analyst v0.5'
+        self.title = 'Subtitle Analyst'
         self.winWidth = 1040
         self.winHeight = 605
         self.initUI()
@@ -293,7 +293,7 @@ class Gui(QMainWindow):
         self.graphInfo.setText(info)
         self.graphInfo.setVisible(True)
 
-    def setList(self, filename, info, scrollBox, infoBox):
+    def setListFile(self, filename, info, scrollBox, infoBox):
         """
         Sets the list title and info labels, and list content QLineEdit object to given strings and filename
         :param filename: string, represents the filepath to a text file
@@ -304,6 +304,57 @@ class Gui(QMainWindow):
         scrollBox.setVisible(True)
         scrollBox.setPlainText(listcontent)
         infoBox.setText(info)
+
+    def setListWord(self, filename, info, scrollBox, infoBox):
+        """
+        Sets the list title and info labesls, and list content QLineEdit  object to given strings
+        Gathers Word list info from database and formats text
+        :param filename: string, represents the filepath to a text file
+        :param info: string, represents labels for list columns
+        """
+        content = ""
+        # Attempt to open database file
+        try:
+            conn = sqlite3.connect(filename)
+        except:
+            return
+
+        c = conn.cursor()
+        for row in c.execute('''SELECT * FROM words ORDER BY ordering'''):
+            #content += str(row) + "\n"
+            content += str(row[1]) + "\t" + str(row[0]) + "\t\t" + str(row[2]) + "\n"
+
+        scrollBox.setVisible(True)
+        scrollBox.setPlainText(content)
+        infoBox.setText(info)
+        conn.close()
+
+
+    def setListCount(self, filename, info, scrollBox, infoBox):
+        """
+        Sets the list title and info labesls, and list content QLineEdit  object to given strings
+        Gathers Word list info from database and formats text
+        :param filename: string, represents the filepath to a text file
+        :param info: string, represents labels for list columns
+        """
+        content = ""
+        # Attempt to open database file
+        try:
+            conn = sqlite3.connect(filename)
+        except:
+            return
+
+        c = conn.cursor()
+        rank = 1
+        for row in c.execute('''SELECT * FROM wordcount ORDER BY count DESC, word ASC'''):
+            #content += str(row) + "\n"
+            content += str(rank) + "\t" + str(row[0]) + "\t\t" + str(row[1]) + "\n"
+            rank += 1
+
+        scrollBox.setVisible(True)
+        scrollBox.setPlainText(content)
+        infoBox.setText(info)
+        conn.close()
 
     def setTitle(self, title):
         """
@@ -323,6 +374,7 @@ class Gui(QMainWindow):
         if (fileName):
             # Attempts to open a file
             try:
+
                 # Sets the subData to data held in selected file
                 self.subData.open_subtitle(fileName)
                 # Sets movieTitle to name up subtitle file, up to 33 characters
@@ -334,20 +386,24 @@ class Gui(QMainWindow):
                 self.setTitle("Subtitle for \"" + self.movieTitle + "\" opened")
 
                 # Sets List to raw subtitle text
-                self.setList(self.subData.subpath, " ", self.subRawContent, self.countInfo)
-                # Load word_count.txt to list
-                self.setList(self.subData.countpath, "# Frequency   Word                                    # Occurences", self.wordCountContent, self.countInfo)
-                # Load word_list.txt to list
-                self.setList(self.subData.listpath, "# Word            Word                                    Time (seconds)", self.wordListContent, self.listInfo)
+                self.setListFile(self.subData.subpath, " ", self.subRawContent, self.countInfo)
+
+                # Load word_db.db to list
+                self.setListCount(self.subData.dbpath, "# Frequency   Word                                    # Occurences", self.wordCountContent, self.countInfo)
+                # Load word_db.db to list
+                self.setListWord(self.subData.dbpath, "# Word            Word                                    Time (seconds)", self.wordListContent, self.listInfo)
                 self.listTabs.setCurrentIndex(0)
                 self.listTabs.setVisible(True)
+
+                # View the word count graph
+                self.viewWordCount()
 
                 # If a file is opened, the subtabs in the view tab become enabled. The main dialog elements become visible
                 self.phraseButton.setEnabled(True)
                 self.countButton.setEnabled(True)
                 self.varietyButton.setEnabled(True)
-                self.graphLabel.setVisible(False)
-                self.graphInfo.setVisible(False)
+                self.graphLabel.setVisible(True)
+                self.graphInfo.setVisible(True)
             # If file cannot be opened, an error window is created
             except:
                 print("Subtitle File Could Not Be Opened") # Change to warning dialog
@@ -368,13 +424,13 @@ class Gui(QMainWindow):
         if ok:    
             # Use Phrase to Generate Graph and Graph Info
             count_data = self.subData.get_phrase_count_data(phrase.lower(), .1)
-            dirname = self.subData.listpath.split("/")[-2]
+            dirname = self.subData.dbpath.split("/")[-2]
             self.subData.get_phrase_count_plot(phrase, count_data, dirname)
             # If the phrase is found in the film, change the list, title and graph
             if (count_data['count'][-1] != 0):
                 info = str(count_data['count'][-1]) + " Instances Of \"" + phrase + "\" In This Film\n"
                 if (len(phrase.split()) == 1):
-                    info += "\"" + phrase + "\" Is The " + self.subData.get_phrase_freq(phrase, count_data['count'][-1]) + " Most Common Word In This Film"
+                    info += "\"" + phrase + "\" Is The " + self.subData.get_phrase_freq(phrase) + " Most Common Word In This Film"
                 self.setGraph(self.subData.imgpath, info)
                 self.setTitle("Phrase Search In \"" + self.movieTitle + "\"")
             # Otherwise create a warning dialog
@@ -393,13 +449,13 @@ class Gui(QMainWindow):
         """
         # Use Phrase to Generate Graph and Graph Info
         count_data = self.subData.get_word_count_data(.1)
-        dirname = self.subData.listpath.split("/")[-2]
+        dirname = self.subData.dbpath.split("/")[-2]
         self.subData.get_word_count_plot(count_data, dirname)
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Words In This Film \n"
             info += "That's {:.2f}".format((count_data['count'][-1])/(count_data['time'][-1])) + " Words per Minute or About "
-            wps = math.ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)
+            wps = ceil(((count_data['count'][-1])/(count_data['time'][-1])) / 60)
             if (wps == 1):
                 info += "1 Word per Second"
             else:
@@ -423,12 +479,12 @@ class Gui(QMainWindow):
         """
         # Use Phrase to Generate Graph and Graph Info
         count_data = self.subData.get_word_variety_data(1/60)
-        dirname = self.subData.listpath.split("/")[-2]
+        dirname = self.subData.dbpath.split("/")[-2]
         self.subData.get_word_variety_plot(count_data, dirname)
         # If the phrase is found in the film, change the list, title and graph
         if (count_data['count'][-1] != 0):
             info = "There's " + "{:,}".format(count_data['count'][-1]) + " Total Unique Words In This Film \n"
-            info += "That's {:.2f}".format(math.ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
+            info += "That's {:.2f}".format(ceil((count_data['count'][-1])/(count_data['time'][-1]))) + " New Words per Minute"
             self.setGraph(self.subData.imgpath, info)
             self.setTitle("Total Unique Word Count In \"" + self.movieTitle + "\"")
         # If the word count is zero, an error message is opened
@@ -629,22 +685,24 @@ class Gui(QMainWindow):
                 self.subData.open_subtitle(fileName)
                 self.listTabs.setVisible(False)
                 # Sets List to raw subtitle text
-                self.setList(self.subData.subpath, " ", self.subRawContent, self.countInfo)
-                # Load word_count.txt to list
-                self.setList(self.subData.countpath, "# Frequency   Word                                    # Occurences", self.wordCountContent, self.countInfo)
-                # Load word_list.txt to list
-                self.setList(self.subData.listpath, "# Word            Word                                    Time (seconds)", self.wordListContent, self.listInfo)
+                self.setListFile(self.subData.subpath, " ", self.subRawContent, self.countInfo)
+                # Load word_db.db to list
+                self.setListCount(self.subData.dbpath, "# Frequency   Word                                    # Occurences", self.wordCountContent, self.countInfo)
+                # Load word_db.db to list
+                self.setListWord(self.subData.dbpath, "# Word            Word                                    Time (seconds)", self.wordListContent, self.listInfo)
                 self.listTabs.setCurrentIndex(0)
                 self.listTabs.setVisible(True)
 
+                # View the word count graph
+                self.viewWordCount()
                 # Sets main dialog title
                 self.setTitle("Subtitle for \"" + self.movieTitle + "\" opened")
                 # Enables view tab buttons, and makes the graph invisible
                 self.phraseButton.setEnabled(True)
                 self.countButton.setEnabled(True)
                 self.varietyButton.setEnabled(True)
-                self.graphLabel.setVisible(False)
-                self.graphInfo.setVisible(False)
+                self.graphLabel.setVisible(True)
+                self.graphInfo.setVisible(True)
             # If unsuccessful, error message is created
             except:
                 print("Subtitle File Could Not Be Opened") # Change to warning dialog
@@ -662,8 +720,8 @@ def initSubFileDir():
         os.mkdir("../../sub_files")
     if not (os.path.isdir("../../sub_files/srt")):
         os.mkdir("../../sub_files/srt")
-    if not (os.path.isdir("../../sub_files/txt")):
-        os.mkdir("../../sub_files/txt")
+    if not (os.path.isdir("../../sub_files/db")):
+        os.mkdir("../../sub_files/db")
     if not (os.path.isdir("../../sub_files/png")):
         os.mkdir("../../sub_files/png")
     if not (os.path.isdir("../../sub_files/zip")):

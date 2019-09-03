@@ -166,7 +166,7 @@ def get_sub_files(searchMovie, language="english"):
 def clean_sub_dir():
 	for dirname in os.listdir(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/srt"):
 		shutil.rmtree(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/srt/" + dirname)
-	for dirname in os.listdir(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/txt"):
-		shutil.rmtree(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/txt/" + dirname)
+	for dirname in os.listdir(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/db"):
+		shutil.rmtree(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/db/" + dirname)
 	for dirname in os.listdir(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/png"):
 		shutil.rmtree(os.path.dirname(os.path.realpath(__file__)) + "/../../sub_files/png/" + dirname)
